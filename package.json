@@ -1,0 +1,15 @@
+{
+  "name": "netangels-ssl-update",
+  "version": "0.0.1",
+  "author": "Artem Kotikov",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "update": "node index.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.4.1",
+    "pino": "^8.18.0"
+  }
+}

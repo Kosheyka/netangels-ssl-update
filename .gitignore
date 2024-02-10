@@ -1,0 +1,13 @@
+.idea
+.DS_Store
+
+node_modules
+.env
+
+*.crt
+*.key
+.last-modified
+temp
+nginx
+
+*.log

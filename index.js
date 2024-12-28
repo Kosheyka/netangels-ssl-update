@@ -26,30 +26,42 @@ const bootstrap = async({
         },
     );
 
-    const { entities: [{ id, updated }] } = await doRequest(
+    const certs = await doRequest(
         'https://api-ms.netangels.ru/api/v1/certificates/',
         { headers: { Authorization: `Bearer ${token}` } },
     );
-    const lastModified = get();
-    if (updated === lastModified) {
-        logger.info('Nothing to update');
-        return;
+
+    const lastModifiedList = get();
+    const nextLastModifiedList = {};
+
+    for (const cert of certs.entities) {
+        const { id, updated } = cert;
+
+        if (lastModifiedList) {
+            const lastModified = lastModifiedList[id];
+            if (lastModified && lastModified === updated) {
+                logger.info('Nothing to update');
+                return;
+            }
+        }
+
+        await download(
+            `https://api-ms.netangels.ru/api/v1/certificates/${id}/download/?type=tar.gz`,
+            './temp/certs.tar.gz',
+            { headers: { Authorization: `Bearer ${token}` } },
+        );
+
+        nextLastModifiedList[id] = updated;
+
+        await exec([
+            `mv ./temp/certs.tar.gz ${sslDir}/certs.tar.gz`,
+            `tar -xf ${sslDir}/certs.tar.gz -C ${sslDir}`,
+            `rm -f ${sslDir}/certs.tar.gz`,
+            'service nginx reload',
+        ]);
     }
 
-    await download(
-        `https://api-ms.netangels.ru/api/v1/certificates/${id}/download/?type=tar.gz`,
-        './temp/certs.tar.gz',
-        { headers: { Authorization: `Bearer ${token}` } },
-    )
-
-    await exec([
-        `mv ./temp/certs.tar.gz ${sslDir}/certs.tar.gz`,
-        `tar -xf ${sslDir}/certs.tar.gz -C ${sslDir}`,
-        `rm -f ${sslDir}/certs.tar.gz`,
-        'service nginx reload',
-    ]);
-
-    set(updated);
+    set(nextLastModifiedList);
     logger.info('Updated successfully');
 };
 

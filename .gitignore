@@ -9,5 +9,6 @@ node_modules
 .last-modified
 temp
 nginx
+ssl
 
 *.log
